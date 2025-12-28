@@ -7,9 +7,10 @@ interface CheckoutProps {
   cart: CartItem[];
   addOrder: (order: Order) => void;
   clearCart: () => void;
+  removeFromCart: (id: string) => void;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart }) => {
+const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFromCart }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -126,34 +127,71 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart }) => {
         <div className="lg:w-96">
           <div className="sticky top-24 bg-slate-900 rounded-[32px] p-8 text-white space-y-6">
             <h3 className="font-bold text-lg">Order Summary</h3>
-            <div className="space-y-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {cart.map(item => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/10 rounded-lg overflow-hidden shrink-0">
-                      <img src={item.image} className="w-full h-full object-cover" />
+                <div key={item.id} className="relative group flex items-start space-x-4 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
+                  <div className="relative w-16 h-16 shrink-0 bg-white/10 rounded-xl overflow-hidden border border-white/10 shadow-lg">
+                    <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-bl-xl shadow-md">
+                      {item.quantity}
                     </div>
-                    <span className="text-gray-300 line-clamp-1">{item.name} <span className="text-white font-bold ml-1">x{item.quantity}</span></span>
                   </div>
-                  <span className="font-bold">${(item.price * item.quantity).toFixed(2)}</span>
+                  
+                  <div className="flex-1 space-y-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-sm font-bold text-white line-clamp-1 pr-4">{item.name}</h4>
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="p-1 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Remove item"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Unit: ${item.price.toFixed(2)}</span>
+                      </div>
+                      <span className="text-sm font-black text-blue-400">${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-[10px] text-gray-500 font-bold uppercase">Ready to Ship</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="border-t border-white/10 pt-4 space-y-2">
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+
+            <div className="border-t border-white/10 pt-6 space-y-4">
+              <div className="flex justify-between text-sm text-gray-400 font-medium">
+                <span>Subtotal ({cart.reduce((a, b) => a + b.quantity, 0)} items)</span>
+                <span className="text-white">${total.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>Tax</span>
-                <span>$0.00</span>
+              <div className="flex justify-between text-sm text-gray-400 font-medium">
+                <span>Shipping Fee</span>
+                <span className="text-green-400 font-bold uppercase text-xs tracking-widest">Calculated at next step</span>
               </div>
-              <div className="flex justify-between text-xl font-black pt-2">
-                <span>Total</span>
-                <span className="text-blue-400">${total.toFixed(2)}</span>
+              <div className="flex justify-between text-sm text-gray-400 font-medium">
+                <span>Est. Tax</span>
+                <span className="text-white">$0.00</span>
+              </div>
+              <div className="pt-2 border-t border-white/5 flex justify-between items-center">
+                <div>
+                  <span className="text-xl font-black text-white">Total Amount</span>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">VAT Included where applicable</p>
+                </div>
+                <span className="text-2xl font-black text-blue-400">${total.toFixed(2)}</span>
               </div>
             </div>
-            <p className="text-[10px] text-gray-500 text-center uppercase font-bold tracking-widest">Secured by ShopBlue Shield</p>
+            
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center space-x-4">
+              <div className="w-10 h-10 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center text-lg">🛡️</div>
+              <div>
+                <h5 className="text-[10px] font-black text-white uppercase tracking-widest">ShopBlue Shield</h5>
+                <p className="text-[9px] text-gray-400">Secure payment & Buyer protection enabled</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

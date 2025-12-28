@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { sourceProductsFromCJ } from '../../services/geminiService';
+import { sourceProductsFromCJ, SourcedProduct } from '../../services/geminiService';
 import { Product } from '../../types';
 
 interface CJImportProps {
@@ -10,7 +10,7 @@ interface CJImportProps {
 const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<Product[]>([]);
+  const [results, setResults] = useState<SourcedProduct[]>([]);
   const [importing, setImporting] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -22,10 +22,12 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
     setLoading(false);
   };
 
-  const handleImport = (p: Product) => {
+  const handleImport = (p: SourcedProduct) => {
     setImporting(p.id);
     setTimeout(() => {
-      addProduct(p);
+      // Remove sourcing-specific metadata before adding to store
+      const { sources, ...productData } = p;
+      addProduct(productData);
       setResults(prev => prev.filter(item => item.id !== p.id));
       setImporting(null);
     }, 1200);
@@ -38,7 +40,7 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold">CJ</div>
           <h1 className="text-3xl font-black text-slate-800">CJ Sourcing Hub</h1>
         </div>
-        <p className="text-gray-500">Source premium products from the global CJ catalog using AI-assisted search.</p>
+        <p className="text-gray-500">Source premium products from the global CJ catalog using AI-assisted search with Google Grounding.</p>
       </header>
 
       <form onSubmit={handleSearch} className="max-w-2xl flex space-x-4">
@@ -59,7 +61,7 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
           {loading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Sourcing...</span>
+              <span>Sourcing Trends...</span>
             </>
           ) : (
             <span>Search CJ</span>
@@ -70,12 +72,12 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
       {results.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {results.map((p) => (
-            <div key={p.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex space-x-6 hover:shadow-xl transition-all group">
-              <div className="w-48 aspect-square rounded-2xl overflow-hidden bg-gray-50 shrink-0">
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-              </div>
-              <div className="flex-1 space-y-3 flex flex-col justify-between">
-                <div>
+            <div key={p.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col space-y-4 hover:shadow-xl transition-all group">
+              <div className="flex space-x-6">
+                <div className="w-32 aspect-square rounded-2xl overflow-hidden bg-gray-50 shrink-0">
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div className="flex-1 space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">{p.category}</span>
                     <span className="text-sm font-bold text-slate-800">${p.price.toFixed(2)}</span>
@@ -83,27 +85,41 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
                   <h3 className="font-bold text-slate-800 line-clamp-1">{p.name}</h3>
                   <p className="text-xs text-gray-500 line-clamp-2">{p.description}</p>
                 </div>
-                
-                <div className="flex items-center justify-between border-t border-gray-50 pt-4">
-                  <div className="flex items-center space-x-1 text-xs text-yellow-500">
-                    <span>★</span>
-                    <span className="font-bold">{p.rating.toFixed(1)}</span>
+              </div>
+              
+              {p.sources && p.sources.length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-xl space-y-1">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Market Data Sources</p>
+                  <div className="flex flex-wrap gap-2">
+                    {p.sources.map((src, i) => (
+                      <a key={i} href={src.uri} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center space-x-1 max-w-[150px] truncate">
+                        <span>🔗</span>
+                        <span className="truncate">{src.title || 'Market Trend'}</span>
+                      </a>
+                    ))}
                   </div>
-                  <button 
-                    onClick={() => handleImport(p)}
-                    disabled={importing !== null}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2"
-                  >
-                    {importing === p.id ? (
-                      <>
-                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                         <span>Importing...</span>
-                      </>
-                    ) : (
-                      <span>Import to Store</span>
-                    )}
-                  </button>
                 </div>
+              )}
+
+              <div className="flex items-center justify-between border-t border-gray-50 pt-4 mt-auto">
+                <div className="flex items-center space-x-1 text-xs text-yellow-500">
+                  <span>★</span>
+                  <span className="font-bold">{p.rating.toFixed(1)}</span>
+                </div>
+                <button 
+                  onClick={() => handleImport(p)}
+                  disabled={importing !== null}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2"
+                >
+                  {importing === p.id ? (
+                    <>
+                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                       <span>Importing...</span>
+                    </>
+                  ) : (
+                    <span>Import to Store</span>
+                  )}
+                </button>
               </div>
             </div>
           ))}
@@ -112,7 +128,7 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
         <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-gray-200">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-50">🚢</div>
           <h3 className="text-xl font-bold text-slate-400">Search to see CJ products</h3>
-          <p className="text-gray-400 text-sm">Real-time sourcing powered by Gemini AI</p>
+          <p className="text-gray-400 text-sm">Real-time sourcing powered by Gemini AI & Google Search</p>
         </div>
       )}
     </div>

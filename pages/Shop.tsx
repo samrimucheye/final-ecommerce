@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { CATEGORIES } from '../constants';
 import ProductCard from '../components/ProductCard';
@@ -7,14 +7,21 @@ import ProductCard from '../components/ProductCard';
 interface ShopProps {
   products: Product[];
   addToCart: (p: Product) => void;
+  wishlist: string[];
+  onToggleWishlist: (id: string) => void;
+  searchQuery?: string;
 }
 
-const Shop: React.FC<ShopProps> = ({ products, addToCart }) => {
+const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWishlist, searchQuery = '' }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating'>('rating');
 
   const filteredProducts = products
-    .filter(p => !selectedCategory || p.category === selectedCategory)
+    .filter(p => {
+      const matchesCategory = !selectedCategory || p.category === selectedCategory;
+      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
     .sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
@@ -62,7 +69,12 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart }) => {
         {/* Main Content */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl border border-gray-100">
-            <p className="text-sm text-gray-500"><span className="font-bold text-slate-800">{filteredProducts.length}</span> products found</p>
+            <div>
+              <p className="text-sm text-gray-500"><span className="font-bold text-slate-800">{filteredProducts.length}</span> products found</p>
+              {searchQuery && (
+                <p className="text-xs text-blue-600 font-medium">Searching for: "{searchQuery}"</p>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">Sort by:</span>
               <select 
@@ -80,14 +92,20 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart }) => {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map(p => (
-                <ProductCard key={p.id} product={p} onAddToCart={() => addToCart(p)} />
+                <ProductCard 
+                  key={p.id} 
+                  product={p} 
+                  onAddToCart={() => addToCart(p)} 
+                  isWishlisted={wishlist.includes(p.id)}
+                  onToggleWishlist={() => onToggleWishlist(p.id)}
+                />
               ))}
             </div>
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-bold text-slate-800">No products found</h3>
-              <p className="text-gray-500">Try adjusting your filters to find what you're looking for.</p>
+              <p className="text-gray-500">Try adjusting your filters or search terms.</p>
             </div>
           )}
         </div>

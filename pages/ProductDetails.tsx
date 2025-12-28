@@ -1,17 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Product } from '../types';
+import ProductCard from '../components/ProductCard';
 
 interface ProductDetailsProps {
   products: Product[];
   addToCart: (p: Product) => void;
+  wishlist: string[];
+  onToggleWishlist: (id: string) => void;
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({ products, addToCart }) => {
+const ProductDetails: React.FC<ProductDetailsProps> = ({ products, addToCart, wishlist, onToggleWishlist }) => {
   const { id } = useParams();
   const product = products.find(p => p.id === id);
   const [qty, setQty] = useState(1);
+
+  // Scroll to top when product ID changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setQty(1);
+  }, [id]);
 
   if (!product) return (
     <div className="max-w-7xl mx-auto px-4 py-20 text-center">
@@ -20,13 +29,30 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ products, addToCart }) 
     </div>
   );
 
+  const isWishlisted = wishlist.includes(product.id);
+  
+  // Filter related products by category, excluding the current product
+  const relatedProducts = products
+    .filter(p => p.category === product.category && p.id !== product.id)
+    .slice(0, 8);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 space-y-20">
       <div className="flex flex-col lg:flex-row gap-12 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
         {/* Gallery */}
         <div className="flex-1 space-y-4">
-          <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden">
+          <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden relative">
             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+            <button 
+              onClick={() => onToggleWishlist(product.id)}
+              className={`absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 ${
+                isWishlisted ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:text-red-500'
+              }`}
+            >
+              <svg className="w-6 h-6" fill={isWishlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.318L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </button>
           </div>
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
@@ -102,6 +128,52 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ products, addToCart }) 
           </div>
         </div>
       </div>
+
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <section className="space-y-8 pb-12">
+          <div className="flex justify-between items-end">
+            <div>
+              <h3 className="text-2xl font-black text-slate-800">Related Products</h3>
+              <p className="text-gray-500 text-sm mt-1">More from the {product.category} collection.</p>
+            </div>
+            <Link to="/shop" className="text-sm font-bold text-blue-600 hover:underline">View All Collection</Link>
+          </div>
+          
+          <div className="relative group">
+            <div className="flex overflow-x-auto space-x-6 pb-8 snap-x snap-mandatory hide-scrollbar scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
+              {relatedProducts.map(rp => (
+                <div key={rp.id} className="min-w-[280px] sm:min-w-[300px] snap-start">
+                  <ProductCard 
+                    product={rp} 
+                    onAddToCart={() => addToCart(rp)}
+                    isWishlisted={wishlist.includes(rp.id)}
+                    onToggleWishlist={() => onToggleWishlist(rp.id)}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Visual indicators for scroll (hidden on mobile) */}
+            <div className="absolute top-1/2 -left-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
+              <div className="w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 pointer-events-none">←</div>
+            </div>
+            <div className="absolute top-1/2 -right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
+              <div className="w-10 h-10 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 pointer-events-none">→</div>
+            </div>
+          </div>
+        </section>
+      )}
+      
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

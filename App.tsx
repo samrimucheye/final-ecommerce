@@ -12,13 +12,17 @@ import Contact from './pages/Contact';
 import AdminDashboard from './pages/Admin/Dashboard';
 import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout';
+import Wishlist from './pages/Wishlist';
 import CartDrawer from './components/CartDrawer';
+import BackToTop from './components/BackToTop';
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Persistence
   useEffect(() => {
@@ -30,6 +34,9 @@ const App: React.FC = () => {
     
     const savedProducts = localStorage.getItem('shopblue_products');
     if (savedProducts) setProducts(JSON.parse(savedProducts));
+
+    const savedWishlist = localStorage.getItem('shopblue_wishlist');
+    if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
   }, []);
 
   useEffect(() => {
@@ -43,6 +50,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('shopblue_products', JSON.stringify(products));
   }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('shopblue_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -70,15 +81,18 @@ const App: React.FC = () => {
   };
 
   const clearCart = () => setCart([]);
-
   const addOrder = (order: Order) => setOrders(prev => [order, ...prev]);
-
   const addProduct = (p: Product) => setProducts(prev => [p, ...prev]);
-
   const removeProduct = (id: string) => setProducts(prev => prev.filter(p => p.id !== id));
 
   const updateOrderStatus = (id: string, status: Order['status']) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  };
+
+  const toggleWishlist = (id: string) => {
+    setWishlist(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -86,7 +100,10 @@ const App: React.FC = () => {
       <div className="flex flex-col min-h-screen">
         <Navbar 
           cartCount={cart.reduce((acc, i) => acc + i.quantity, 0)} 
+          wishlistCount={wishlist.length}
           onCartClick={() => setIsCartOpen(true)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
         
         <CartDrawer 
@@ -99,12 +116,13 @@ const App: React.FC = () => {
 
         <main className="flex-grow pt-16">
           <Routes>
-            <Route path="/" element={<Home products={products} addToCart={addToCart} />} />
-            <Route path="/shop" element={<Shop products={products} addToCart={addToCart} />} />
+            <Route path="/" element={<Home products={products} addToCart={addToCart} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
+            <Route path="/shop" element={<Shop products={products} addToCart={addToCart} wishlist={wishlist} onToggleWishlist={toggleWishlist} searchQuery={searchQuery} />} />
+            <Route path="/wishlist" element={<Wishlist products={products} addToCart={addToCart} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/product/:id" element={<ProductDetails products={products} addToCart={addToCart} />} />
-            <Route path="/checkout" element={<Checkout cart={cart} addOrder={addOrder} clearCart={clearCart} />} />
+            <Route path="/product/:id" element={<ProductDetails products={products} addToCart={addToCart} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
+            <Route path="/checkout" element={<Checkout cart={cart} addOrder={addOrder} clearCart={clearCart} removeFromCart={removeFromCart} />} />
             <Route 
               path="/admin/*" 
               element={
@@ -120,6 +138,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
 
+        <BackToTop />
         <Footer />
       </div>
     </HashRouter>

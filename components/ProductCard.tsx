@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 interface ProductCardProps {
   product: Product;
   onAddToCart: () => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, isWishlisted, onToggleWishlist }) => {
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 p-3 hover:shadow-xl transition-all duration-300">
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 mb-4">
@@ -17,8 +19,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 shadow-md transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.318L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleWishlist?.();
+          }}
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
+            isWishlisted 
+              ? 'bg-red-500 text-white opacity-100 translate-y-0' 
+              : 'bg-white text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0'
+          }`}
+        >
+          <svg className="w-5 h-5" fill={isWishlisted ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.318L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
         </button>
         {product.originalPrice && (
           <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg">

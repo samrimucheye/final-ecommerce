@@ -7,9 +7,11 @@ import ProductCard from '../components/ProductCard';
 interface HomeProps {
   products: Product[];
   addToCart: (p: Product) => void;
+  wishlist: string[];
+  onToggleWishlist: (id: string) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ products, addToCart }) => {
+const Home: React.FC<HomeProps> = ({ products, addToCart, wishlist, onToggleWishlist }) => {
   const trendingProducts = products.filter(p => p.isTrending);
 
   return (
@@ -92,7 +94,13 @@ const Home: React.FC<HomeProps> = ({ products, addToCart }) => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {trendingProducts.map(p => (
-            <ProductCard key={p.id} product={p} onAddToCart={() => addToCart(p)} />
+            <ProductCard 
+              key={p.id} 
+              product={p} 
+              onAddToCart={() => addToCart(p)} 
+              isWishlisted={wishlist.includes(p.id)}
+              onToggleWishlist={() => onToggleWishlist(p.id)}
+            />
           ))}
         </div>
       </section>
