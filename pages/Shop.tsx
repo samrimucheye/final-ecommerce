@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { CATEGORIES } from '../constants';
 import ProductCard from '../components/ProductCard';
+import { ProductSkeleton } from '../components/SkeletonLoader';
 
 interface ShopProps {
   products: Product[];
@@ -12,10 +13,15 @@ interface ShopProps {
   searchQuery?: string;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWishlist, searchQuery = '' }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'rating'>('rating');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Filter and Sort products
   const filteredProducts = products
     .filter(p => {
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
@@ -27,6 +33,25 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
       if (sortBy === 'price-desc') return b.price - a.price;
       return b.rating - a.rating;
     });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Reset to first page and trigger loading animation when filters or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, [selectedCategory, sortBy, searchQuery]);
+
+  // Scroll to top when page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -89,18 +114,67 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
             </div>
           </div>
 
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map(p => (
-                <ProductCard 
-                  key={p.id} 
-                  product={p} 
-                  onAddToCart={() => addToCart(p)} 
-                  isWishlisted={wishlist.includes(p.id)}
-                  onToggleWishlist={() => onToggleWishlist(p.id)}
-                />
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProductSkeleton key={i} />
               ))}
             </div>
+          ) : paginatedProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                {paginatedProducts.map(p => (
+                  <ProductCard 
+                    key={p.id} 
+                    product={p} 
+                    onAddToCart={() => addToCart(p)} 
+                    isWishlisted={wishlist.includes(p.id)}
+                    onToggleWishlist={() => onToggleWishlist(p.id)}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 pt-8 border-t border-gray-100">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    aria-label="Previous page"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                          : 'bg-white border border-gray-100 text-gray-500 hover:border-blue-600 hover:text-blue-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    aria-label="Next page"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
               <div className="text-6xl mb-4">🔍</div>

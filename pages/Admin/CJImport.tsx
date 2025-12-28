@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { sourceProductsFromCJ, SourcedProduct } from '../../services/geminiService';
 import { Product } from '../../types';
+import { CJResultSkeleton } from '../../components/SkeletonLoader';
 
 interface CJImportProps {
   addProduct: (p: Product) => void;
@@ -50,7 +51,7 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for 'smart home gadgets' or 'men luxury watches'..." 
-            className="w-full bg-white border border-gray-200 rounded-2xl py-4 px-12 focus:ring-4 focus:ring-blue-100 outline-none text-slate-800 shadow-sm"
+            className="w-full bg-white border border-gray-100 rounded-2xl py-4 px-12 focus:ring-4 focus:ring-blue-100 outline-none text-slate-800 shadow-sm"
           />
           <svg className="w-6 h-6 text-gray-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
@@ -69,7 +70,14 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
         </button>
       </form>
 
-      {results.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CJResultSkeleton />
+          <CJResultSkeleton />
+          <CJResultSkeleton />
+          <CJResultSkeleton />
+        </div>
+      ) : results.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {results.map((p) => (
             <div key={p.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col space-y-4 hover:shadow-xl transition-all group">
@@ -124,7 +132,7 @@ const CJImport: React.FC<CJImportProps> = ({ addProduct }) => {
             </div>
           ))}
         </div>
-      ) : !loading && (
+      ) : (
         <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-gray-200">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl opacity-50">🚢</div>
           <h3 className="text-xl font-bold text-slate-400">Search to see CJ products</h3>

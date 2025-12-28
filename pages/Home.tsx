@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '../types';
 import { CATEGORIES } from '../constants';
 import ProductCard from '../components/ProductCard';
@@ -11,40 +11,130 @@ interface HomeProps {
   onToggleWishlist: (id: string) => void;
 }
 
+const HERO_SLIDES = [
+  {
+    id: 1,
+    badge: "Summer Sale is Live",
+    title: "Summer Collection 2024",
+    desc: "Discover the hottest trends and upgrade your style today with our exclusive new arrivals. Free shipping on orders over $50.",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80",
+    buttonPrimary: "Shop Now",
+    buttonSecondary: "Learn More"
+  },
+  {
+    id: 2,
+    badge: "Tech Innovation",
+    title: "Next-Gen Electronics",
+    desc: "Experience the future of smart home technology and audio excellence with our curated high-performance gadgets.",
+    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1920&q=80",
+    buttonPrimary: "Explore Tech",
+    buttonSecondary: "View Deals"
+  },
+  {
+    id: 3,
+    badge: "Urban Lifestyle",
+    title: "Modern Minimalist Style",
+    desc: "Redefine your wardrobe with essentials that combine comfort, durability, and timeless aesthetic design.",
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e12?auto=format&fit=crop&w=1920&q=80",
+    buttonPrimary: "Shop Fashion",
+    buttonSecondary: "See Lookbook"
+  }
+];
+
 const Home: React.FC<HomeProps> = ({ products, addToCart, wishlist, onToggleWishlist }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const trendingProducts = products.filter(p => p.isTrending);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+  }, []);
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+  };
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 5000);
+    return () => clearInterval(timer);
+  }, [nextSlide]);
+
+  const handleDotClick = (index: number) => {
+    setCurrentSlide(index);
+  };
 
   return (
     <div className="space-y-16 pb-20">
-      {/* Hero Section */}
+      {/* Hero Section - Auto Sliding Carousel */}
       <section className="relative h-[600px] bg-gray-100 overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=80" 
-            className="w-full h-full object-cover opacity-90"
-            alt="Hero"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+        {/* Slides Container */}
+        <div 
+          className="flex h-full transition-transform duration-700 ease-in-out" 
+          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        >
+          {HERO_SLIDES.map((slide) => (
+            <div key={slide.id} className="relative min-w-full h-full flex-shrink-0">
+              <div className="absolute inset-0">
+                <img 
+                  src={slide.image} 
+                  className="w-full h-full object-cover"
+                  alt={slide.title}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent"></div>
+              </div>
+              
+              <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center text-white">
+                <div className="max-w-xl space-y-6">
+                  <span className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full tracking-wider uppercase animate-in fade-in slide-in-from-left-4 duration-700">
+                    {slide.badge}
+                  </span>
+                  <h1 className="text-6xl font-extrabold leading-tight animate-in fade-in slide-in-from-left-6 duration-700 delay-100">
+                    {slide.title}
+                  </h1>
+                  <p className="text-lg text-gray-100/90 leading-relaxed animate-in fade-in slide-in-from-left-8 duration-700 delay-200">
+                    {slide.desc}
+                  </p>
+                  <div className="flex space-x-4 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+                      {slide.buttonPrimary}
+                    </button>
+                    <button className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-xl font-bold border border-white/30 transition-all active:scale-95">
+                      {slide.buttonSecondary}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center text-white">
-          <div className="max-w-xl space-y-6">
-            <span className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full tracking-wider uppercase">Summer Sale is Live</span>
-            <h1 className="text-6xl font-extrabold leading-tight">Summer Collection 2024</h1>
-            <p className="text-lg text-gray-100/90 leading-relaxed">
-              Discover the hottest trends and upgrade your style today with our exclusive new arrivals. Free shipping on orders over $50.
-            </p>
-            <div className="flex space-x-4 pt-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20">Shop Now</button>
-              <button className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-8 py-4 rounded-xl font-bold border border-white/30 transition-all">Learn More</button>
-            </div>
-          </div>
-          
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-2">
-            <div className="w-8 h-1 bg-blue-500 rounded-full"></div>
-            <div className="w-2 h-1 bg-white/50 rounded-full"></div>
-            <div className="w-2 h-1 bg-white/50 rounded-full"></div>
-          </div>
+        {/* Navigation Arrows */}
+        <button 
+          onClick={prevSlide}
+          className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all z-20 group"
+          aria-label="Previous slide"
+        >
+          <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button 
+          onClick={nextSlide}
+          className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all z-20 group"
+          aria-label="Next slide"
+        >
+          <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        {/* Navigation Dots */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+          {HERO_SLIDES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleDotClick(index)}
+              className={`transition-all duration-300 rounded-full h-1.5 ${
+                currentSlide === index ? 'w-10 bg-blue-500' : 'w-2 bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </section>
 
