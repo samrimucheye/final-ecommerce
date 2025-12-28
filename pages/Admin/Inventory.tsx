@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '../../types';
 import { CATEGORIES } from '../../constants';
 
@@ -11,13 +11,15 @@ interface InventoryProps {
 
 const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProduct }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imageMethod, setImageMethod] = useState<'file' | 'url'>('file');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: CATEGORIES[0].name,
     stock: '10',
-    image: ''
+    image: '',
+    imageUrl: ''
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,8 +36,10 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.image) {
-      alert("Please upload a product image.");
+    const finalImage = imageMethod === 'file' ? formData.image : formData.imageUrl;
+    
+    if (!finalImage) {
+      alert("Please provide a product image.");
       return;
     }
 
@@ -46,22 +50,30 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
       price: parseFloat(formData.price),
       category: formData.category,
       stock: parseInt(formData.stock),
-      image: formData.image,
+      image: finalImage,
       rating: 5.0,
       importedFrom: 'Local'
     };
 
     addProduct(newProduct);
     setIsModalOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
     setFormData({
       name: '',
       description: '',
       price: '',
       category: CATEGORIES[0].name,
       stock: '10',
-      image: ''
+      image: '',
+      imageUrl: ''
     });
+    setImageMethod('file');
   };
+
+  const displayedPreview = imageMethod === 'file' ? formData.image : formData.imageUrl;
 
   return (
     <div className="space-y-8">
@@ -88,7 +100,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
               <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400">✕</button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-gray-400 uppercase">Product Name</label>
@@ -97,7 +109,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                     type="text" 
                     value={formData.name}
                     onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
                     placeholder="e.g. Premium Wireless Mouse"
                   />
                 </div>
@@ -106,7 +118,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                   <select 
                     value={formData.category}
                     onChange={e => setFormData(p => ({ ...p, category: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                   >
                     {CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                   </select>
@@ -119,7 +131,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                   required
                   value={formData.description}
                   onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]" 
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]" 
                   placeholder="Describe your product features..."
                 />
               </div>
@@ -133,7 +145,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                     step="0.01"
                     value={formData.price}
                     onChange={e => setFormData(p => ({ ...p, price: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
                     placeholder="0.00"
                   />
                 </div>
@@ -144,44 +156,84 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                     type="number" 
                     value={formData.stock}
                     onChange={e => setFormData(p => ({ ...p, stock: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
                     placeholder="10"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Product Image</label>
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all overflow-hidden min-h-[200px] flex flex-col items-center justify-center"
-                >
-                  {formData.image ? (
-                    <div className="absolute inset-0">
-                      <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity">
-                        Change Image
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-4xl mb-4">📸</div>
-                      <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                      <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">PNG, JPG up to 5MB</p>
-                    </>
-                  )}
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Product Image</label>
+                  <div className="flex bg-gray-100 p-1 rounded-xl">
+                    <button 
+                      type="button"
+                      onClick={() => setImageMethod('file')}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'file' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                      Upload File
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setImageMethod('url')}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'url' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                      Image URL
+                    </button>
+                  </div>
                 </div>
+
+                {imageMethod === 'file' ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all overflow-hidden min-h-[200px] flex flex-col items-center justify-center"
+                  >
+                    {formData.image ? (
+                      <div className="absolute inset-0">
+                        <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity">
+                          Change Image
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-4xl mb-4">📸</div>
+                        <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">PNG, JPG up to 5MB</p>
+                      </>
+                    )}
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <input 
+                      type="text" 
+                      value={formData.imageUrl}
+                      onChange={e => setFormData(p => ({ ...p, imageUrl: e.target.value }))}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                      placeholder="https://images.unsplash.com/photo-..."
+                    />
+                    <div className="aspect-video bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center">
+                      {formData.imageUrl ? (
+                        <img src={formData.imageUrl} className="w-full h-full object-cover" alt="URL Preview" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/400x225?text=Invalid+Image+URL')} />
+                      ) : (
+                        <div className="text-center p-4">
+                          <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Image Preview will appear here</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4">
-                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold shadow-xl shadow-blue-600/20 transition-all">
+                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold shadow-xl shadow-blue-600/20 transition-all active:scale-95">
                   Create Product
                 </button>
               </div>
@@ -199,7 +251,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
               <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Price</th>
               <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Stock</th>
               <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Source</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Actions</th>
+              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -229,8 +281,8 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                     {p.importedFrom || 'Local'}
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
+                <td className="px-6 py-4 text-right">
+                  <div className="flex items-center justify-end space-x-2">
                     <button className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-blue-600 transition">
                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     </button>
