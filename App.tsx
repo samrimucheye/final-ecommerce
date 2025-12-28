@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { Product, CartItem, Order } from './types';
+import { Product, CartItem, Order, User } from './types';
 import { INITIAL_PRODUCTS } from './constants';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -15,14 +15,18 @@ import Checkout from './pages/Checkout';
 import Wishlist from './pages/Wishlist';
 import CartDrawer from './components/CartDrawer';
 import BackToTop from './components/BackToTop';
+import AuthModal from './components/AuthModal';
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [authIntent, setAuthIntent] = useState<'checkout' | 'none'>('none');
 
   // Persistence
   useEffect(() => {
@@ -37,6 +41,9 @@ const App: React.FC = () => {
 
     const savedWishlist = localStorage.getItem('shopblue_wishlist');
     if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+
+    const savedUser = localStorage.getItem('shopblue_user');
+    if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
 
   useEffect(() => {
@@ -54,6 +61,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('shopblue_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
+
+  useEffect(() => {
+    if (user) localStorage.setItem('shopblue_user', JSON.stringify(user));
+    else localStorage.removeItem('shopblue_user');
+  }, [user]);
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -95,10 +107,35 @@ const App: React.FC = () => {
     );
   };
 
+  const handleLoginSuccess = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    setIsAuthModalOpen(false);
+    if (authIntent === 'checkout') {
+      // Small delay to let the modal close smoothly before potentially redirecting
+      setTimeout(() => {
+         window.location.hash = '/checkout';
+      }, 300);
+    }
+    setAuthIntent('none');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('shopblue_user');
+  };
+
+  const triggerCheckoutAuth = () => {
+    setAuthIntent('checkout');
+    setIsAuthModalOpen(true);
+  };
+
   return (
     <HashRouter>
       <div className="flex flex-col min-h-screen">
         <Navbar 
+          user={user}
+          onLogout={handleLogout}
+          onLoginClick={() => setIsAuthModalOpen(true)}
           cartCount={cart.reduce((acc, i) => acc + i.quantity, 0)} 
           wishlistCount={wishlist.length}
           onCartClick={() => setIsCartOpen(true)}
@@ -112,6 +149,17 @@ const App: React.FC = () => {
           items={cart}
           onUpdateQty={updateQuantity}
           onRemove={removeFromCart}
+          user={user}
+          onProceedToCheckout={triggerCheckoutAuth}
+        />
+
+        <AuthModal 
+          isOpen={isAuthModalOpen}
+          onClose={() => {
+            setIsAuthModalOpen(false);
+            setAuthIntent('none');
+          }}
+          onSuccess={handleLoginSuccess}
         />
 
         <main className="flex-grow pt-16">
@@ -122,7 +170,7 @@ const App: React.FC = () => {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/product/:id" element={<ProductDetails products={products} addToCart={addToCart} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
-            <Route path="/checkout" element={<Checkout cart={cart} addOrder={addOrder} clearCart={clearCart} removeFromCart={removeFromCart} />} />
+            <Route path="/checkout" element={<Checkout cart={cart} addOrder={addOrder} clearCart={clearCart} removeFromCart={removeFromCart} user={user} />} />
             <Route 
               path="/admin/*" 
               element={

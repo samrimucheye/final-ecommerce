@@ -1,19 +1,44 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CartItem, Order } from '../types';
+import { CartItem, Order, User } from '../types';
 
 interface CheckoutProps {
   cart: CartItem[];
   addOrder: (order: Order) => void;
   clearCart: () => void;
   removeFromCart: (id: string) => void;
+  user: User | null;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFromCart }) => {
+const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFromCart, user }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: user?.name || '',
+    email: user?.email || '',
+    address: ''
+  });
+
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  // If user state updates, update form data
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.name,
+        email: prev.email || user.email
+      }));
+    }
+  }, [user]);
+
+  // Protect route if no user (fallback)
+  useEffect(() => {
+    if (!user && cart.length > 0) {
+      navigate('/');
+    }
+  }, [user, navigate, cart.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +53,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
         total: total,
         status: 'Processing',
         customer: {
-          name: (e.target as any).fullName.value,
-          email: (e.target as any).email.value,
+          name: formData.fullName,
+          email: formData.email,
         },
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       };
@@ -37,7 +62,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
       addOrder(newOrder);
       clearCart();
       setLoading(false);
-      alert('Order Placed Successfully! Redirecting to confirmation...');
+      alert('Order Placed Successfully! Thank you for shopping with ShopBlue.');
       navigate('/');
     }, 2000);
   };
@@ -52,146 +77,149 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 animate-in fade-in duration-500">
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="flex-1">
-          <h1 className="text-3xl font-black text-slate-800 mb-8">Checkout</h1>
+          <div className="mb-8">
+             <h1 className="text-4xl font-black text-slate-800">Checkout</h1>
+             <p className="text-gray-400 mt-2">Finish your order and we'll handle the rest.</p>
+          </div>
+          
           <form onSubmit={handleSubmit} className="space-y-8">
-            <section className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm">1</span>
+            <section className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center space-x-3">
+                <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs font-black">1</span>
                 <span>Shipping Information</span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Full Name</label>
-                  <input name="fullName" required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Doe" />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                  <input 
+                    name="fullName" 
+                    required 
+                    value={formData.fullName}
+                    onChange={e => setFormData({...formData, fullName: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" 
+                    placeholder="John Doe" 
+                  />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Email Address</label>
-                  <input name="email" type="email" required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="john@example.com" />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                  <input 
+                    name="email" 
+                    type="email" 
+                    required 
+                    value={formData.email}
+                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" 
+                    placeholder="john@example.com" 
+                  />
                 </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Address</label>
-                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="123 Luxury Lane" />
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Delivery Address</label>
+                  <input 
+                    required 
+                    value={formData.address}
+                    onChange={e => setFormData({...formData, address: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" 
+                    placeholder="123 Luxury Lane, Apt 4B" 
+                  />
                 </div>
               </div>
             </section>
 
-            <section className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-sm">2</span>
+            <section className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+              <h3 className="text-xl font-bold text-slate-800 flex items-center space-x-3">
+                <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs font-black">2</span>
                 <span>Payment Method</span>
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="border-2 border-blue-600 bg-blue-50 p-4 rounded-2xl cursor-pointer">
+                <div className="border-2 border-blue-600 bg-blue-50/50 p-6 rounded-[24px] cursor-pointer relative overflow-hidden group">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-slate-800 text-sm">Credit Card</span>
                     <span className="text-xl">💳</span>
                   </div>
-                  <p className="text-[10px] text-gray-500">Fast and Secure</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Instant Approval</p>
+                  <div className="absolute top-0 right-0 w-8 h-8 bg-blue-600 flex items-center justify-center text-white rounded-bl-xl">✓</div>
                 </div>
-                <div className="border-2 border-gray-100 p-4 rounded-2xl cursor-not-allowed opacity-50">
+                <div className="border-2 border-gray-100 p-6 rounded-[24px] cursor-not-allowed opacity-50 bg-gray-50/50">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-slate-800 text-sm">PayPal</span>
                     <span className="text-xl">🅿️</span>
                   </div>
-                  <p className="text-[10px] text-gray-500">Coming soon</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Coming soon</p>
                 </div>
               </div>
               <div className="space-y-4 pt-2">
-                <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Card Number" />
+                <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Card Number (0000 0000 0000 0000)" />
                 <div className="grid grid-cols-2 gap-4">
-                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="MM/YY" />
-                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="CVC" />
+                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Exp. (MM/YY)" />
+                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="CVC" />
                 </div>
               </div>
             </section>
 
             <button 
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-5 rounded-[20px] font-black text-lg shadow-2xl shadow-blue-600/30 transition-all flex items-center justify-center space-x-4"
+              className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white py-6 rounded-[28px] font-black text-xl shadow-2xl shadow-slate-900/20 transition-all flex items-center justify-center space-x-4 active:scale-[0.98]"
             >
               {loading ? (
                 <>
                   <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Processing Payment...</span>
+                  <span>Securing Order...</span>
                 </>
               ) : (
-                <span>Complete Order • ${total.toFixed(2)}</span>
+                <span>Complete Purchase • ${total.toFixed(2)}</span>
               )}
             </button>
           </form>
         </div>
 
         <div className="lg:w-96">
-          <div className="sticky top-24 bg-slate-900 rounded-[32px] p-8 text-white space-y-6">
-            <h3 className="font-bold text-lg">Order Summary</h3>
-            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="sticky top-24 bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
+            <div className="bg-slate-900 p-8 text-white">
+               <h3 className="font-bold text-lg">Order Summary</h3>
+               <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">{cart.length} items to be delivered</p>
+            </div>
+            
+            <div className="p-8 space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar">
               {cart.map(item => (
-                <div key={item.id} className="relative group flex items-start space-x-4 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/10">
-                  <div className="relative w-16 h-16 shrink-0 bg-white/10 rounded-xl overflow-hidden border border-white/10 shadow-lg">
+                <div key={item.id} className="flex items-center space-x-4">
+                  <div className="relative w-16 h-16 shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                     <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
-                    <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-bl-xl shadow-md">
+                    <span className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-black w-5 h-5 flex items-center justify-center rounded-bl-lg shadow-md">
                       {item.quantity}
-                    </div>
+                    </span>
                   </div>
-                  
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-bold text-white line-clamp-1 pr-4">{item.name}</h4>
-                      <button 
-                        onClick={() => removeFromCart(item.id)}
-                        className="p-1 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Remove item"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Unit: ${item.price.toFixed(2)}</span>
-                      </div>
-                      <span className="text-sm font-black text-blue-400">${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                      <span className="text-[10px] text-gray-500 font-bold uppercase">Ready to Ship</span>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-slate-800 truncate">{item.name}</h4>
+                    <p className="text-[10px] text-gray-400 mt-0.5">${item.price.toFixed(2)} each</p>
                   </div>
+                  <span className="text-xs font-black text-slate-800">${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-white/10 pt-6 space-y-4">
-              <div className="flex justify-between text-sm text-gray-400 font-medium">
-                <span>Subtotal ({cart.reduce((a, b) => a + b.quantity, 0)} items)</span>
-                <span className="text-white">${total.toFixed(2)}</span>
+            <div className="p-8 bg-gray-50 border-t border-gray-100 space-y-4">
+              <div className="flex justify-between text-xs text-gray-500 font-bold uppercase tracking-widest">
+                <span>Subtotal</span>
+                <span className="text-slate-800">${total.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-400 font-medium">
-                <span>Shipping Fee</span>
-                <span className="text-green-400 font-bold uppercase text-xs tracking-widest">Calculated at next step</span>
+              <div className="flex justify-between text-xs text-gray-500 font-bold uppercase tracking-widest">
+                <span>Shipping</span>
+                <span className="text-green-600">FREE</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-400 font-medium">
-                <span>Est. Tax</span>
-                <span className="text-white">$0.00</span>
-              </div>
-              <div className="pt-2 border-t border-white/5 flex justify-between items-center">
-                <div>
-                  <span className="text-xl font-black text-white">Total Amount</span>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">VAT Included where applicable</p>
-                </div>
-                <span className="text-2xl font-black text-blue-400">${total.toFixed(2)}</span>
+              <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
+                <span className="text-lg font-black text-slate-800">Grand Total</span>
+                <span className="text-2xl font-black text-blue-600">${total.toFixed(2)}</span>
               </div>
             </div>
-            
-            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center space-x-4">
-              <div className="w-10 h-10 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center text-lg">🛡️</div>
-              <div>
-                <h5 className="text-[10px] font-black text-white uppercase tracking-widest">ShopBlue Shield</h5>
-                <p className="text-[9px] text-gray-400">Secure payment & Buyer protection enabled</p>
-              </div>
-            </div>
+          </div>
+          
+          <div className="mt-6 flex items-center justify-center space-x-4 text-gray-400 grayscale opacity-50">
+             <span className="text-2xl">💳</span>
+             <span className="text-2xl">🛡️</span>
+             <span className="text-2xl">📦</span>
           </div>
         </div>
       </div>

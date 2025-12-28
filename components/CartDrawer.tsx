@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { CartItem } from '../types';
-import { Link } from 'react-router-dom';
+import { CartItem, User } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -9,10 +9,22 @@ interface CartDrawerProps {
   items: CartItem[];
   onUpdateQty: (id: string, delta: number) => void;
   onRemove: (id: string) => void;
+  user: User | null;
+  onProceedToCheckout: () => void;
 }
 
-const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdateQty, onRemove }) => {
+const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdateQty, onRemove, user, onProceedToCheckout }) => {
+  const navigate = useNavigate();
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const handleCheckoutClick = () => {
+    if (!user) {
+      onProceedToCheckout();
+    } else {
+      onClose();
+      navigate('/checkout');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -75,13 +87,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdat
                   <span className="text-lg font-black text-slate-800">Total</span>
                   <span className="text-2xl font-black text-blue-600">${subtotal.toFixed(2)}</span>
                 </div>
-                <Link 
-                  to="/checkout" 
-                  onClick={onClose}
+                <button 
+                  onClick={handleCheckoutClick}
                   className="block w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-center font-bold shadow-xl shadow-slate-900/20 transition-all active:scale-95"
                 >
                   Proceed to Checkout
-                </Link>
+                </button>
               </div>
             )}
           </div>
