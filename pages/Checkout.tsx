@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CartItem, Order, User } from '../types';
 
@@ -14,15 +14,125 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFromCart, user }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
+  const [paypalError, setPaypalError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: user?.name || '',
     email: user?.email || '',
     address: ''
   });
-
+  
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
   const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // If user state updates, update form data
+  // Robust PayPal Initialization
+  useEffect(() => {
+    let paypalButtons: any = null;
+
+    const renderPayPalButtons = async () => {
+      if (paymentMethod !== 'paypal') return;
+      
+      // Reset error state
+      setPaypalError(null);
+
+      // Check if SDK is available
+      const paypal = (window as any).paypal;
+      if (!paypal) {
+        setPaypalError("PayPal SDK failed to load. Please check your internet connection or browser security settings (like ad-blockers).");
+        return;
+      }
+
+      // Ensure the container is available and clear it
+      if (paypalButtonRef.current) {
+        paypalButtonRef.current.innerHTML = '';
+        
+        try {
+          paypalButtons = paypal.Buttons({
+            style: {
+              layout: 'vertical',
+              color: 'gold',
+              shape: 'rect',
+              label: 'paypal'
+            },
+            createOrder: (data: any, actions: any) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: total.toFixed(2),
+                    currency_code: 'USD'
+                  },
+                  description: `ShopBlue Order - ${cart.length} items`
+                }]
+              });
+            },
+            onApprove: async (data: any, actions: any) => {
+              setLoading(true);
+              try {
+                const details = await actions.order.capture();
+                
+                const newOrder: Order = {
+                  id: details.id || Math.random().toString(36).substr(2, 9).toUpperCase(),
+                  items: [...cart],
+                  total: total,
+                  status: 'Processing',
+                  customer: {
+                    name: formData.fullName || (details.payer.name?.given_name + ' ' + details.payer.name?.surname),
+                    email: formData.email || details.payer.email_address,
+                  },
+                  date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                };
+                
+                addOrder(newOrder);
+                clearCart();
+                setLoading(false);
+                alert('PayPal Payment Successful! Order Placed.');
+                navigate('/');
+              } catch (e) {
+                console.error("Capture Error:", e);
+                setPaypalError("Payment capture failed. Please contact support.");
+                setLoading(false);
+              }
+            },
+            onCancel: () => {
+              console.log("Payment Cancelled");
+            },
+            onError: (err: any) => {
+              console.error('PayPal SDK Error:', err);
+              // Handle "Can not read window host" or other cross-origin frame errors
+              if (err.toString().includes("host") || err.toString().includes("origin")) {
+                setPaypalError("PayPal is unable to load in this environment due to security restrictions. This often happens in private browsing or embedded previews. Please try the 'Credit Card' method instead.");
+              } else {
+                setPaypalError("A technical error occurred with PayPal. Please try another payment method.");
+              }
+            }
+          });
+
+          if (paypalButtons.isEligible()) {
+            await paypalButtons.render(paypalButtonRef.current);
+          } else {
+            setPaypalError("This payment method is currently ineligible for your account or region.");
+          }
+        } catch (initError) {
+          console.error("PayPal Init Error:", initError);
+          setPaypalError("Could not initialize PayPal buttons. Please try again.");
+        }
+      }
+    };
+
+    renderPayPalButtons();
+
+    // Cleanup
+    return () => {
+      if (paypalButtons) {
+        // Some versions of the SDK don't support .close(), but if they do, use it
+        if (typeof paypalButtons.close === 'function') {
+          paypalButtons.close();
+        }
+      }
+    };
+  }, [paymentMethod, total, cart, formData, addOrder, clearCart, navigate]);
+
+  // Sync user data to form
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -33,19 +143,18 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
     }
   }, [user]);
 
-  // Protect route if no user (fallback)
+  // Protect route
   useEffect(() => {
     if (!user && cart.length > 0) {
       navigate('/');
     }
   }, [user, navigate, cart.length]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
     
     setLoading(true);
-    // Simulate payment processing
     setTimeout(() => {
       const newOrder: Order = {
         id: Math.random().toString(36).substr(2, 9).toUpperCase(),
@@ -62,7 +171,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
       addOrder(newOrder);
       clearCart();
       setLoading(false);
-      alert('Order Placed Successfully! Thank you for shopping with ShopBlue.');
+      alert('Credit Card Payment Successful! Order Placed.');
       navigate('/');
     }, 2000);
   };
@@ -85,7 +194,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
              <p className="text-gray-400 mt-2">Finish your order and we'll handle the rest.</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-8">
             <section className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
               <h3 className="text-xl font-bold text-slate-800 flex items-center space-x-3">
                 <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs font-black">1</span>
@@ -133,46 +242,85 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
                 <span className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs font-black">2</span>
                 <span>Payment Method</span>
               </h3>
+              
               <div className="grid grid-cols-2 gap-4">
-                <div className="border-2 border-blue-600 bg-blue-50/50 p-6 rounded-[24px] cursor-pointer relative overflow-hidden group">
+                <div 
+                  onClick={() => setPaymentMethod('card')}
+                  className={`border-2 p-6 rounded-[24px] cursor-pointer relative overflow-hidden transition-all ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+                >
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-slate-800 text-sm">Credit Card</span>
                     <span className="text-xl">💳</span>
                   </div>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Instant Approval</p>
-                  <div className="absolute top-0 right-0 w-8 h-8 bg-blue-600 flex items-center justify-center text-white rounded-bl-xl">✓</div>
+                  {paymentMethod === 'card' && (
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-blue-600 flex items-center justify-center text-white rounded-bl-xl">✓</div>
+                  )}
                 </div>
-                <div className="border-2 border-gray-100 p-6 rounded-[24px] cursor-not-allowed opacity-50 bg-gray-50/50">
+                
+                <div 
+                  onClick={() => setPaymentMethod('paypal')}
+                  className={`border-2 p-6 rounded-[24px] cursor-pointer relative overflow-hidden transition-all ${paymentMethod === 'paypal' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+                >
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-slate-800 text-sm">PayPal</span>
                     <span className="text-xl">🅿️</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Coming soon</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Fast & Secure</p>
+                  {paymentMethod === 'paypal' && (
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-blue-600 flex items-center justify-center text-white rounded-bl-xl">✓</div>
+                  )}
                 </div>
               </div>
-              <div className="space-y-4 pt-2">
-                <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Card Number (0000 0000 0000 0000)" />
-                <div className="grid grid-cols-2 gap-4">
-                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Exp. (MM/YY)" />
-                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="CVC" />
-                </div>
-              </div>
-            </section>
 
-            <button 
-              disabled={loading}
-              className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white py-6 rounded-[28px] font-black text-xl shadow-2xl shadow-slate-900/20 transition-all flex items-center justify-center space-x-4 active:scale-[0.98]"
-            >
-              {loading ? (
-                <>
-                  <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Securing Order...</span>
-                </>
+              {paymentMethod === 'card' ? (
+                <form onSubmit={handleCardSubmit} className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Card Number (0000 0000 0000 0000)" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="Exp. (MM/YY)" />
+                    <input required className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="CVC" />
+                  </div>
+                  <button 
+                    disabled={loading}
+                    className="w-full mt-4 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white py-6 rounded-[28px] font-black text-xl shadow-2xl shadow-slate-900/20 transition-all flex items-center justify-center space-x-4 active:scale-[0.98]"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Securing Order...</span>
+                      </>
+                    ) : (
+                      <span>Complete Purchase • ${total.toFixed(2)}</span>
+                    )}
+                  </button>
+                </form>
               ) : (
-                <span>Complete Purchase • ${total.toFixed(2)}</span>
+                <div className="pt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {paypalError ? (
+                    <div className="bg-red-50 border border-red-100 p-6 rounded-2xl text-center space-y-3">
+                       <p className="text-red-500 text-sm font-bold">⚠️ PayPal Connectivity Issue</p>
+                       <p className="text-xs text-gray-500 leading-relaxed">{paypalError}</p>
+                       <button 
+                        onClick={() => setPaymentMethod('card')}
+                        className="text-xs font-black text-blue-600 uppercase tracking-widest hover:underline"
+                       >
+                         Switch to Credit Card
+                       </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs text-center text-gray-500 mb-2">You will be redirected to PayPal's secure portal to finalize your payment.</p>
+                      <div ref={paypalButtonRef} className="min-h-[150px]">
+                        <div className="w-full h-32 bg-gray-50 rounded-2xl flex items-center justify-center animate-pulse border border-dashed border-gray-200">
+                           <p className="text-xs font-bold text-gray-300">Loading PayPal Interface...</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
-            </button>
-          </form>
+            </section>
+          </div>
         </div>
 
         <div className="lg:w-96">
@@ -214,12 +362,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, addOrder, clearCart, removeFr
                 <span className="text-2xl font-black text-blue-600">${total.toFixed(2)}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-6 flex items-center justify-center space-x-4 text-gray-400 grayscale opacity-50">
-             <span className="text-2xl">💳</span>
-             <span className="text-2xl">🛡️</span>
-             <span className="text-2xl">📦</span>
           </div>
         </div>
       </div>

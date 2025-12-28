@@ -15,6 +15,16 @@
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
         }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
     </style>
 <script type="importmap">
 {
@@ -30,5 +40,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900">
     <div id="root"></div>
+    <!-- PayPal SDK Loaded at the end to ensure DOM is ready. Replace 'sb' with your client-id -->
+    <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=capture&vault=false"></script>
 </body>
 </html>
