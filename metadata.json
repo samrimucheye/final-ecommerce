@@ -1,0 +1,7 @@
+{
+  "name": "ShopBlue - Premium E-Commerce & Dropshipping Hub",
+  "description": "A sophisticated e-commerce platform with a high-end UI, featuring a comprehensive shop experience and an advanced admin panel with simulated CJ Dropshipping integration and AI-powered product sourcing.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
