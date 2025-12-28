@@ -27,6 +27,25 @@ const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [authIntent, setAuthIntent] = useState<'checkout' | 'none'>('none');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const savedTheme = localStorage.getItem('shopblue_theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  // Theme Toggling logic
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('shopblue_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   // Persistence
   useEffect(() => {
@@ -111,7 +130,6 @@ const App: React.FC = () => {
     setUser(loggedInUser);
     setIsAuthModalOpen(false);
     if (authIntent === 'checkout') {
-      // Small delay to let the modal close smoothly before potentially redirecting
       setTimeout(() => {
          window.location.hash = '/checkout';
       }, 300);
@@ -131,7 +149,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <Navbar 
           user={user}
           onLogout={handleLogout}
@@ -141,6 +159,8 @@ const App: React.FC = () => {
           onCartClick={() => setIsCartOpen(true)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
         
         <CartDrawer 

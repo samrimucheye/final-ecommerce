@@ -21,7 +21,6 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Filter and Sort products
   const filteredProducts = products
     .filter(p => {
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
@@ -34,12 +33,10 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
       return b.rating - a.rating;
     });
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // Reset to first page and trigger loading animation when filters or sort change
   useEffect(() => {
     setCurrentPage(1);
     setIsLoading(true);
@@ -47,7 +44,6 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
     return () => clearTimeout(timer);
   }, [selectedCategory, sortBy, searchQuery]);
 
-  // Scroll to top when page changes
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -56,14 +52,13 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar Filters */}
         <aside className="w-full md:w-64 space-y-8">
           <div>
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Categories</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Categories</h3>
             <div className="space-y-2">
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className={`w-full text-left px-4 py-2 rounded-xl text-sm transition ${!selectedCategory ? 'bg-blue-600 text-white font-bold' : 'text-gray-500 hover:bg-gray-100'}`}
+                className={`w-full text-left px-4 py-2 rounded-xl text-sm transition ${!selectedCategory ? 'bg-blue-600 text-white font-bold' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
               >
                 All Products
               </button>
@@ -71,7 +66,7 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`w-full text-left px-4 py-2 rounded-xl text-sm transition ${selectedCategory === cat.name ? 'bg-blue-600 text-white font-bold' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`w-full text-left px-4 py-2 rounded-xl text-sm transition ${selectedCategory === cat.name ? 'bg-blue-600 text-white font-bold' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'}`}
                 >
                   {cat.name}
                 </button>
@@ -80,10 +75,10 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
           </div>
           
           <div>
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Price Range</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Price Range</h3>
             <div className="space-y-4">
-              <input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
-              <div className="flex justify-between text-xs text-gray-500">
+              <input type="range" className="w-full h-2 bg-gray-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+              <div className="flex justify-between text-xs text-gray-500 dark:text-slate-500">
                 <span>$0</span>
                 <span>$500+</span>
               </div>
@@ -91,21 +86,17 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
           </div>
         </aside>
 
-        {/* Main Content */}
         <div className="flex-1">
-          <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-2xl border border-gray-100">
+          <div className="flex justify-between items-center mb-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 transition-colors">
             <div>
-              <p className="text-sm text-gray-500"><span className="font-bold text-slate-800">{filteredProducts.length}</span> products found</p>
-              {searchQuery && (
-                <p className="text-xs text-blue-600 font-medium">Searching for: "{searchQuery}"</p>
-              )}
+              <p className="text-sm text-gray-500 dark:text-slate-400"><span className="font-bold text-slate-800 dark:text-white">{filteredProducts.length}</span> products found</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Sort by:</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400">Sort by:</span>
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent border-none outline-none text-sm font-bold text-slate-800 cursor-pointer"
+                className="bg-transparent border-none outline-none text-sm font-bold text-slate-800 dark:text-white cursor-pointer"
               >
                 <option value="rating">Best Rating</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -134,14 +125,12 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
                 ))}
               </div>
 
-              {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 pt-8 border-t border-gray-100">
+                <div className="flex justify-center items-center space-x-2 pt-8 border-t border-gray-100 dark:border-slate-800">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    aria-label="Previous page"
+                    className="p-2 rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -155,7 +144,7 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
                       className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
                         currentPage === page
                           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                          : 'bg-white border border-gray-100 text-gray-500 hover:border-blue-600 hover:text-blue-600'
+                          : 'bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-500 dark:text-slate-400 hover:border-blue-600 hover:text-blue-600'
                       }`}
                     >
                       {page}
@@ -165,8 +154,7 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    aria-label="Next page"
+                    className="p-2 rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -176,10 +164,10 @@ const Shop: React.FC<ShopProps> = ({ products, addToCart, wishlist, onToggleWish
               )}
             </>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
+            <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 transition-colors">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-slate-800">No products found</h3>
-              <p className="text-gray-500">Try adjusting your filters or search terms.</p>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">No products found</h3>
+              <p className="text-gray-500 dark:text-slate-400">Try adjusting your filters or search terms.</p>
             </div>
           )}
         </div>

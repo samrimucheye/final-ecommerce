@@ -76,11 +76,11 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
   const displayedPreview = imageMethod === 'file' ? formData.image : formData.imageUrl;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 transition-colors duration-300">
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-slate-800">Inventory Management</h1>
-          <p className="text-gray-500">Manage your local and dropshipped product catalog.</p>
+          <h1 className="text-3xl font-black text-slate-800 dark:text-white">Inventory Management</h1>
+          <p className="text-gray-500 dark:text-slate-400">Manage your local and dropshipped product catalog.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -94,69 +94,69 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-slate-800">Add New Product</h2>
-              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400">✕</button>
+          <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-100 dark:border-slate-800 transition-colors">
+            <div className="p-8 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white">Add New Product</h2>
+              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center text-gray-400 transition-colors">✕</button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Product Name</label>
+                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Product Name</label>
                   <input 
                     required
                     type="text" 
                     value={formData.name}
                     onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all" 
                     placeholder="e.g. Premium Wireless Mouse"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Category</label>
+                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Category</label>
                   <select 
                     value={formData.category}
                     onChange={e => setFormData(p => ({ ...p, category: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none dark:text-white transition-all"
                   >
-                    {CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                    {CATEGORIES.map(c => <option key={c.id} value={c.name} className="dark:bg-slate-900">{c.name}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase">Description</label>
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Description</label>
                 <textarea 
                   required
                   value={formData.description}
                   onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]" 
+                  className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] dark:text-white transition-all" 
                   placeholder="Describe your product features..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Price ($)</label>
+                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Price ($)</label>
                   <input 
                     required
                     type="number" 
                     step="0.01"
                     value={formData.price}
                     onChange={e => setFormData(p => ({ ...p, price: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all" 
                     placeholder="0.00"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Stock Quantity</label>
+                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Stock Quantity</label>
                   <input 
                     required
                     type="number" 
                     value={formData.stock}
                     onChange={e => setFormData(p => ({ ...p, stock: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all" 
                     placeholder="10"
                   />
                 </div>
@@ -164,19 +164,19 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Product Image</label>
-                  <div className="flex bg-gray-100 p-1 rounded-xl">
+                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Product Image</label>
+                  <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button 
                       type="button"
                       onClick={() => setImageMethod('file')}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'file' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'file' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     >
                       Upload File
                     </button>
                     <button 
                       type="button"
                       onClick={() => setImageMethod('url')}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'url' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-lg transition ${imageMethod === 'url' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     >
                       Image URL
                     </button>
@@ -186,7 +186,7 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                 {imageMethod === 'file' ? (
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all overflow-hidden min-h-[200px] flex flex-col items-center justify-center"
+                    className="group relative border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all overflow-hidden min-h-[200px] flex flex-col items-center justify-center"
                   >
                     {formData.image ? (
                       <div className="absolute inset-0">
@@ -198,8 +198,8 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                     ) : (
                       <>
                         <div className="text-4xl mb-4">📸</div>
-                        <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">PNG, JPG up to 5MB</p>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">Click to upload or drag and drop</p>
+                        <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1 uppercase font-bold">PNG, JPG up to 5MB</p>
                       </>
                     )}
                     <input 
@@ -216,15 +216,15 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
                       type="text" 
                       value={formData.imageUrl}
                       onChange={e => setFormData(p => ({ ...p, imageUrl: e.target.value }))}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" 
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all" 
                       placeholder="https://images.unsplash.com/photo-..."
                     />
-                    <div className="aspect-video bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden flex items-center justify-center">
+                    <div className="aspect-video bg-gray-50 dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden flex items-center justify-center transition-colors">
                       {formData.imageUrl ? (
                         <img src={formData.imageUrl} className="w-full h-full object-cover" alt="URL Preview" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/400x225?text=Invalid+Image+URL')} />
                       ) : (
                         <div className="text-center p-4">
-                          <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Image Preview will appear here</p>
+                          <p className="text-[10px] font-black text-gray-300 dark:text-slate-600 uppercase tracking-widest text-center">Image Preview will appear here</p>
                         </div>
                       )}
                     </div>
@@ -242,62 +242,64 @@ const Inventory: React.FC<InventoryProps> = ({ products, removeProduct, addProdu
         </div>
       )}
 
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Product</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Category</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Price</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Stock</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase">Source</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {products.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-4">
-                    <img src={p.image} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{p.name}</p>
-                      <p className="text-[10px] text-gray-400 line-clamp-1">{p.description}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-xs font-medium text-slate-600 bg-gray-100 px-2.5 py-1 rounded-lg">{p.category}</span>
-                </td>
-                <td className="px-6 py-4 font-bold text-slate-800">${p.price.toFixed(2)}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <span className={`w-2 h-2 rounded-full ${p.stock > 10 ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                    <span className="text-sm text-slate-700">{p.stock}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                   <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${p.importedFrom === 'CJ' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-white'}`}>
-                    {p.importedFrom || 'Local'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-blue-600 transition">
-                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    </button>
-                    <button 
-                      onClick={() => removeProduct(p.id)}
-                      className="p-2 hover:bg-white hover:shadow-md rounded-lg text-gray-400 hover:text-red-500 transition"
-                    >
-                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                  </div>
-                </td>
+      <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-800">
+              <tr>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Product</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Category</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Price</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Stock</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase">Source</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-slate-500 uppercase text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+              {products.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-4">
+                      <img src={p.image} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-gray-100 dark:border-slate-700" />
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{p.name}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-slate-500 line-clamp-1">{p.description}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg transition-colors">{p.category}</span>
+                  </td>
+                  <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">${p.price.toFixed(2)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <span className={`w-2 h-2 rounded-full ${p.stock > 10 ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                      <span className="text-sm text-slate-700 dark:text-slate-300">{p.stock}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                     <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md transition-colors ${p.importedFrom === 'CJ' ? 'bg-blue-600 text-white' : 'bg-slate-800 dark:bg-slate-700 text-white'}`}>
+                      {p.importedFrom || 'Local'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button className="p-2 hover:bg-white dark:hover:bg-slate-700 hover:shadow-md rounded-lg text-gray-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                      </button>
+                      <button 
+                        onClick={() => removeProduct(p.id)}
+                        className="p-2 hover:bg-white dark:hover:bg-slate-700 hover:shadow-md rounded-lg text-gray-400 dark:text-slate-500 hover:text-red-500 transition"
+                      >
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
